@@ -1,0 +1,9 @@
+*.pyc
+**/migrations
+**/media
+**/images
+**/__pycache__
+tests.py
+.DS_Store
+static/*
+.env
