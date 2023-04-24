@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
 from .tasks import send_mail_password_reset,send_mail_activation_link
 from django.contrib.auth.hashers import check_password
-# from django.contrib.auth import authenticate,login,logout
+from .models import Role,UserRole
 
 # Create your views here.
 class RegisterView(APIView):
@@ -48,9 +48,16 @@ class ConfirmRegistrationView(APIView):
             return Response({"Error": "Token is not valid or expired"})
         user.is_active = True  
         user.save()
-        
         token = get_tokens_for_user(user)
-
+        try:
+            role = Role.objects.create(user = user)
+            userrole = UserRole.objects.create(user=user,role = role)
+        except:
+            return Response({
+                'message':'user role does not create',
+                'status':status.HTTP_400_BAD_REQUEST
+            })
+        
         return Response({
             "data":"Your Account activated "+user.username, "jwt-token":token},
               status=status.HTTP_201_CREATED

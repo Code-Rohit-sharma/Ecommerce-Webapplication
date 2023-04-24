@@ -12,8 +12,8 @@ class UserInline(admin.StackedInline):
 class CustomizeUserAdmin(UserAdmin):
     inlines = (UserInline,)
   
-
 admin.site.register(Role)
 admin.site.register(UserRole)
+
 admin.site.unregister(User)
 admin.site.register(User,CustomizeUserAdmin)

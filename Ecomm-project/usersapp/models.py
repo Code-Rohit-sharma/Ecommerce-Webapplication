@@ -18,7 +18,7 @@ class CustomizeUser(models.Model):
     
 class Role(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE)
-    authority = models.CharField(choices=AUTHORITY_CHOICES,max_length=50)
+    authority = models.CharField(choices=AUTHORITY_CHOICES,max_length=50,default='CUSTOMER')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
