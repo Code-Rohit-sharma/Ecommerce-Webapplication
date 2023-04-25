@@ -8,4 +8,8 @@ urlpatterns = [
     path('login/',views.LoginView.as_view(),name='login'),
     path('password-reset/',views.ResetPasswordView.as_view(),name='reset-password'),
     path('password-reset/<str:encoded_pk>/<str:token>/',views.PasswordResetConfirmView.as_view(),name='reset-password'),
+
+    #customer views
+    path('customers/',views.CustomerView.as_view(),name='customers'),
+    path('sellers/',views.SellerView.as_view(),name='sellers'),
 ]

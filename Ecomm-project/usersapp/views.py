@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import RegisterSerializer,ChangePasswordSerializer,LoginSerializer,PasswordResetSerializer,PasswordResetConfirmSerializer
+from .serializers import RegisterSerializer,ChangePasswordSerializer,LoginSerializer,PasswordResetSerializer,PasswordResetConfirmSerializer,CustomerSerializer,SellerSerialzier
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework.response import Response
@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
 from .tasks import send_mail_password_reset,send_mail_activation_link
 from django.contrib.auth.hashers import check_password
-from .models import Role,UserRole
+from .models import Role,UserRole,Customer,Seller,Address
 
 # Create your views here.
 class RegisterView(APIView):
@@ -21,6 +21,7 @@ class RegisterView(APIView):
 
     def post(self,request):
         data = request.data
+        contact = request.data['contact']
         serializer_class = RegisterSerializer(data=data)
         serializer_class.is_valid(raise_exception=True)
         user = serializer_class.save()
@@ -31,6 +32,7 @@ class RegisterView(APIView):
         encodedCustId = urlsafe_base64_encode(force_bytes(custId))
         token = PasswordResetTokenGenerator().make_token(user)
         activation_link = 'http://127.0.0.1:8000/users/confirm-registration/'+encodedCustId+'/'+token+'/'
+        customer = Customer.objects.get_or_create(user = user,contact = contact)
         send_mail_activation_link.delay(user.email,activation_link)
 
         return Response({
@@ -41,6 +43,7 @@ class RegisterView(APIView):
 
 class ConfirmRegistrationView(APIView):
     permission_classes = [AllowAny]
+    
     def post(self, request, encoded_pk, token, format=None):
         id = smart_str(urlsafe_base64_decode(encoded_pk))
         user = User.objects.get(id = id)
@@ -49,15 +52,8 @@ class ConfirmRegistrationView(APIView):
         user.is_active = True  
         user.save()
         token = get_tokens_for_user(user)
-        try:
-            role = Role.objects.create(user = user)
-            userrole = UserRole.objects.create(user=user,role = role)
-        except:
-            return Response({
-                'message':'user role does not create',
-                'status':status.HTTP_400_BAD_REQUEST
-            })
-        
+        role = Role.objects.get(authority = 'CUSTOMER')
+        userRole = UserRole.objects.get_or_create(user = user,role = role)        
         return Response({
             "data":"Your Account activated "+user.username, "jwt-token":token},
               status=status.HTTP_201_CREATED
@@ -107,7 +103,6 @@ class ChangePasswordView(APIView):
     def post(self,request):
         data = request.data
         user = request.user
-        # print(user)
         serializer = ChangePasswordSerializer(data=data,context = {'user':user})
         serializer.is_valid(raise_exception=True)
         return Response({
@@ -155,4 +150,24 @@ class PasswordResetConfirmView(APIView):
         return Response({
             'message':'password reset complete',
             'status':status.HTTP_200_OK
+        })
+    
+#Customer views
+class CustomerView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+        customers = Customer.objects.all()
+        serializer = CustomerSerializer(customers,many = True)
+        return Response({
+            'data':serializer.data
+        }) 
+
+#sellers views
+class SellerView(APIView):
+    def get(self,request):
+        sellers = Seller.objects.all()
+        serializer = SellerSerialzier(sellers,many = True)
+        return Response({
+            'data':serializer.data
         })

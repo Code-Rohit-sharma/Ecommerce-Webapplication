@@ -6,6 +6,7 @@ from django.contrib.auth.hashers import check_password
 from .models import CustomizeUser
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from .models import Customer,Seller
 
 class RegisterSerializer(serializers.ModelSerializer):
     queryset = User.objects.all()
@@ -145,3 +146,24 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('password')
+
+#customer serializer
+class CustomerSerializer(serializers.ModelSerializer):
+    contact = serializers.IntegerField()
+    alternate_contact = serializers.IntegerField()
+
+    # def validate(self, attrs):  
+        
+
+    class Meta:
+        model = Customer
+        fields = '__all__'
+        depth = 1
+
+#sellers serializer
+class SellerSerialzier(serializers.ModelSerializer):
+
+    class Meta:
+        model = Seller
+        fields = '__all__'
+        depth = 1
