@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 import environ
+from datetime import timedelta
+from django.conf import settings
 
 env = environ.Env()
 environ.Env.read_env()
@@ -139,7 +141,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#SMTP settings
+# SMTP settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
@@ -148,7 +150,7 @@ EMAIL_HOST_USER = 'girishshrma750@gmail.com'
 EMAIL_HOST_PASSWORD = env('PASSWORD')
 DEFAULT_FROM_EMAIL = 'Celery <girishshrma750@gmail.com>'
 
-#celery base setup
+# celery base setup
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -167,7 +169,12 @@ CELERY_TIME_ZONE = 'Asia/Kolkata'
 
 CELERY_RESULT_BACKEND = 'django-db'
 
-#multiple DB Routing setting
+# multiple DB Routing setting
 # DATABASE_ROUTERS = [
 #                     'routers.db_routers.UsersRouter',
 #                 ]
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=5),
+}

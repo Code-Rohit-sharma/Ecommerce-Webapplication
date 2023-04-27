@@ -25,6 +25,8 @@ class CustomizeUserAdmin(UserAdmin):
     inlines = (UserInline,AddressInline,CustomerInline)
   
 admin.site.register(Address)
+admin.site.register(Seller)
+admin.site.register(Customer)
 
 admin.site.register(Role)
 admin.site.register(UserRole)

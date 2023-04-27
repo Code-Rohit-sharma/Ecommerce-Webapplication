@@ -12,4 +12,7 @@ urlpatterns = [
     #customer views
     path('customers/',views.CustomerView.as_view(),name='customers'),
     path('sellers/',views.SellerView.as_view(),name='sellers'),
+
+    #address views
+    path('address/',views.AddressView.as_view(),name='address'),
 ]
