@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from .generate_token import get_tokens_for_user
 from django.utils.encoding import force_bytes, smart_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -14,6 +15,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tasks import send_mail_password_reset, send_mail_activation_link
 from django.contrib.auth.hashers import check_password
 from .models import Role, UserRole, Customer, Seller, Address
+from django.contrib.auth import logout
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Create your views here.
 
@@ -109,6 +112,21 @@ class LoginView(APIView):
             'message': 'successfully Login',
             'status': status.HTTP_200_OK
         })
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    def post(self, request, format=None):
+            # reqToken = request.headers['Authorization'][8:]
+            try:
+                refresh_token = request.data["refresh_token"]
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                logout(request)
+
+                return Response({'msg':'logout successfully'},status=status.HTTP_205_RESET_CONTENT)
+            except Exception as e:
+                return Response({'error':'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):

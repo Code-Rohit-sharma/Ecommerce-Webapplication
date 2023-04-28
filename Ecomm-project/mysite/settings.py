@@ -38,8 +38,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'usersapp',
-    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,6 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_rest_passwordreset',
     'django_celery_results',
+    'rest_framework',
+    'usersapp',
+    'Ecommerce',
+    'paymentapp',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -84,19 +87,18 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'Ecommerce_db',
+        'USER': 'postgres',
+        'PASSWORD': 'rohit@123',
+        'HOST': 'localhost',
+        'PORT':'5432',
     },
-    # 'usersapp_db': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'usersapp',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'rohit@123',
-    #     'HOST': 'localhost',
-    #     'PORT':'5432',
-    # }
 }
 
 
@@ -172,6 +174,8 @@ CELERY_RESULT_BACKEND = 'django-db'
 # multiple DB Routing setting
 # DATABASE_ROUTERS = [
 #                     'routers.db_routers.UsersRouter',
+#                     'routers.db_routers.EcommerceRouter',
+#                     'routers.db_routers.PaymentRouter',
 #                 ]
 
 SIMPLE_JWT = {
