@@ -113,20 +113,22 @@ class LoginView(APIView):
             'status': status.HTTP_200_OK
         })
 
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    def post(self, request, format=None):
-            # reqToken = request.headers['Authorization'][8:]
-            try:
-                refresh_token = request.data["refresh_token"]
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-                logout(request)
 
-                return Response({'msg':'logout successfully'},status=status.HTTP_205_RESET_CONTENT)
-            except Exception as e:
-                return Response({'error':'error'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, format=None):
+        # reqToken = request.headers['Authorization'][8:]
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            logout(request)
+
+            return Response({'msg': 'logout successfully'}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({'error': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):
