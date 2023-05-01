@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ParentCategory,Category,CategoryMetaDataField,CategoryMetaDataFieldValue,Product,ProductVariation
+from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview
 
 
 class ParentCategorySerializer(serializers.ModelSerializer):
@@ -7,16 +7,18 @@ class ParentCategorySerializer(serializers.ModelSerializer):
         model = ParentCategory
         fields = '__all__'
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
-        depth = 1
+
 
 class CategoryMetaDataFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryMetaDataField
         fields = '__all__'
+
 
 class CategoryMetaDataFieldValueSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,13 +26,20 @@ class CategoryMetaDataFieldValueSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 1
 
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
 
+
 class ProductVariationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductVariation
         fields = '__all__'
-        depth = 1
+
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductReview
+        fields = '__all__'

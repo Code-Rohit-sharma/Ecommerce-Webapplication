@@ -8,4 +8,5 @@ urlpatterns = [
     path('category-metadata-field-value/',views.CategoryMetaDataFieldValueView.as_view(),name='category-metadata-field-value'),
     path('products/',views.ProductView.as_view(),name='category'),
     path('product-variation/',views.ProductVariationView.as_view(),name='product-variation'),
+    path('product-review/',views.ProductReviewView.as_view(),name='product-review'),
 ]

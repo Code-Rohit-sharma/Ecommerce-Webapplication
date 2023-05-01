@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import ParentCategorySerializer, CategorySerializer, CategoryMetaDataFieldSerializer, CategoryMetaDataFieldValueSerializer, ProductSerializer, ProductVariationSerializer
+from .serializers import ParentCategorySerializer, CategorySerializer, CategoryMetaDataFieldSerializer, CategoryMetaDataFieldValueSerializer, ProductSerializer, ProductVariationSerializer, ProductReviewSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation
+from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview
 from rest_framework.permissions import AllowAny
+from usersapp.models import Customer
+from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -98,6 +100,7 @@ class CategoryView(APIView):
             'status': status.HTTP_200_OK
         })
 
+
 class CategoryMetaDataFieldView(APIView):
 
     def get(self, request):
@@ -112,7 +115,7 @@ class CategoryMetaDataFieldView(APIView):
         data = request.data
         serializer = CategoryMetaDataFieldSerializer(data=data)
 
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
 
         return Response({
@@ -132,6 +135,17 @@ class CategoryMetaDataFieldValueView(APIView):
             'status': status.HTTP_200_OK
         })
 
+    def post(self, request):
+        data = request.data
+        serializer = CategoryMetaDataFieldValueSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+        return Response({
+            'message': 'Data saved',
+            'status': status.HTTP_200_OK
+        })
+
 
 class ProductView(APIView):
 
@@ -147,11 +161,12 @@ class ProductView(APIView):
     def post(self, reqeust):
         data = reqeust.data
         serializer = ProductSerializer(data=data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
         return Response({
             'message': 'product saved',
-            'status': status.HTTP_200_OK
+            'status': status.HTTP_200_OK,
+            'data': serializer.data
         })
 
 
@@ -164,4 +179,50 @@ class ProductVariationView(APIView):
         return Response({
             'data': serializer.data,
             'status': status.HTTP_200_OK
+        })
+
+    def post(self, request):
+        data = request.data
+        serializer = ProductVariationSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response({
+            'message': 'product variation saved',
+            'status': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
+
+class ProductReviewView(APIView):
+
+    def get(self, request):
+        productreviews = ProductReview.objects.all()
+        serializer = ProductReviewSerializer(productreviews, many=True)
+        return Response({
+            'data': serializer.data,
+            'status': status.HTTP_200_OK
+        })
+
+    def post(self, request):
+        data = request.data
+        serializer = ProductReviewSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response({
+            'message': 'Review post',
+            'status': status.HTTP_200_OK,
+            'review': serializer.data
+        })
+
+    def delete(self, request):
+        data = request.data
+        review = ProductReview.objects.filter(
+            customer=data['customer']).filter(product=data['product'])
+        if not review:
+            return Response({
+                'message': 'review not found'
+            })
+        review.delete()
+        return Response({
+            'message': 'deleted'
         })

@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tasks import send_mail_password_reset, send_mail_activation_link
 from django.contrib.auth.hashers import check_password
-from .models import Role, UserRole, Customer, Seller, Address
+from .models import Role, UserRole, Customer, Seller, Address, CustomizeUser
 from django.contrib.auth import logout
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -46,6 +46,8 @@ class RegisterView(APIView):
         activation_link = 'http://127.0.0.1:8000/users/confirm-registration/' + \
             encodedCustId+'/'+token+'/'
         # customer = Customer.objects.get_or_create(user = user,contact = contact)
+        CustomizeUser.objects.create(
+            user=user, is_deleted=False, is_expired=False, is_locked=False, invalid_password_attempt=0)
         send_mail_activation_link.delay(user.email, activation_link)
 
         return Response({
@@ -66,12 +68,46 @@ class ConfirmRegistrationView(APIView):
         user.is_active = True
         user.save()
         token = get_tokens_for_user(user)
-        role = Role.objects.get(authority='CUSTOMER')
-        userRole = UserRole.objects.get_or_create(user=user, role=role)
+        # role = Role.objects.get(authority='CUSTOMER')
+        # userRole = UserRole.objects.get_or_create(user=user, role=role)
         return Response({
             "data": "Your Account activated "+user.username, "jwt-token": token},
             status=status.HTTP_201_CREATED
         )
+
+
+class DeleteUser(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        data = request.data
+        user = request.user
+
+        try:
+            user = User.objects.get(username=user.username)
+        except:
+            return Response({
+                'message': 'user not found',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        if not check_password(data['password'], user.password):
+            return Response({
+                'message': 'password not found',
+                'status': status.HTTP_401_UNAUTHORIZED
+            })
+
+        user.is_active = False
+        customize_user = CustomizeUser.objects.get(user=user)
+        customize_user.is_deleted = True
+        user.save()
+        customize_user.save()
+
+        return Response({
+            'message': 'user deleted',
+            'status': status.HTTP_200_OK
+        })
 
 
 class LoginView(APIView):
@@ -88,9 +124,29 @@ class LoginView(APIView):
                 'message': 'Invalid Credentials',
                 'status': status.HTTP_400_BAD_REQUEST
             })
+        customizeuser = CustomizeUser.objects.get(user=user)
+
         if not check_password(password, user.password):
+            customizeuser.invalid_password_attempt = customizeuser.invalid_password_attempt + 1
+            customizeuser.save()
+            if customizeuser.invalid_password_attempt >= 5:
+                customizeuser.is_locked = True
+                customizeuser.save()
+
             return Response({
                 'message': 'Invalid Credentials',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        if customizeuser.is_locked == True:
+            return Response({
+                'message': 'Your accout is locked due to too many wrong password attempts',
+                'status': status.HTTP_401_UNAUTHORIZED
+            })
+
+        if customizeuser.is_deleted == True:
+            return Response({
+                'message': 'This is account is already deleted',
                 'status': status.HTTP_400_BAD_REQUEST
             })
 
@@ -119,7 +175,6 @@ class LogoutView(APIView):
     authentication_classes = [JWTAuthentication]
 
     def post(self, request, format=None):
-        # reqToken = request.headers['Authorization'][8:]
         try:
             refresh_token = request.data["refresh_token"]
             token = RefreshToken(refresh_token)

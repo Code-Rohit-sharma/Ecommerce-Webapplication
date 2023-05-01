@@ -15,7 +15,7 @@ class CustomizeUser(models.Model):
     is_expired = models.BooleanField(default=False)
     is_locked = models.BooleanField(default=False)
     invalid_password_attempt = models.PositiveIntegerField(default=0)
-    password_update_date = models.DateField()
+    password_update_date = models.DateField(null=True,blank=True)
 
 
 class Role(models.Model):
@@ -52,8 +52,8 @@ class Customer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.user.username
+    # def __str__(self):
+    #     return self.user.username
 
 
 class Address(models.Model):
