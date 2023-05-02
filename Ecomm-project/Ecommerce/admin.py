@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview
+from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct, OrderStatus
 
 # Register your models here.
 admin.site.register(ParentCategory)
@@ -9,3 +9,7 @@ admin.site.register(CategoryMetaDataFieldValue)
 admin.site.register(Product)
 admin.site.register(ProductVariation)
 admin.site.register(ProductReview)
+admin.site.register(Cart)
+admin.site.register(Order)
+admin.site.register(OrderProduct)
+admin.site.register(OrderStatus)

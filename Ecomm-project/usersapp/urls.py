@@ -9,7 +9,7 @@ urlpatterns = [
     path('logout/',views.LogoutView.as_view(),name='logout'),
     path('password-reset/',views.ResetPasswordView.as_view(),name='reset-password'),
     path('password-reset/<str:encoded_pk>/<str:token>/',views.PasswordResetConfirmView.as_view(),name='reset-password'),
-    path('account-delete/',views.DeleteUser.as_view(),name = 'delete-account'),
+    path('account-delete/',views.DeleteUserView.as_view(),name = 'delete-account'),
 
     #customer views
     path('customers/',views.CustomerView.as_view(),name='customers'),

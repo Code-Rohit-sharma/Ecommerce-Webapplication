@@ -138,13 +138,16 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'error': 'Your uid is Wrong'
             })
-        print(user)
         if not PasswordResetTokenGenerator().check_token(user, token):
             raise serializers.ValidationError({
                 'error': 'reset token is invalid'
             })
         user.set_password(password)
         user.is_active = True
+        customizeuser = CustomizeUser.objects.get(user=user)
+        customizeuser.invalid_password_attempt = 0
+        customizeuser.is_locked = False
+        customizeuser.save()
         user.save()
         return data
 
@@ -191,7 +194,6 @@ class SellerSerialzier(serializers.ModelSerializer):
 
 
 class AddressSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Address
         fields = ['city', 'state', 'address_line', 'zip_code', 'label']

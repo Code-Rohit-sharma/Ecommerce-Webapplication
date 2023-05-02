@@ -17,6 +17,9 @@ class CustomizeUser(models.Model):
     invalid_password_attempt = models.PositiveIntegerField(default=0)
     password_update_date = models.DateField(null=True,blank=True)
 
+    def __str__(self):
+        return self.user.username
+
 
 class Role(models.Model):
     authority = models.CharField(
@@ -52,8 +55,8 @@ class Customer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # def __str__(self):
-    #     return self.user.username
+    def __str__(self):
+        return self.user.username
 
 
 class Address(models.Model):

@@ -17,6 +17,7 @@ from django.contrib.auth.hashers import check_password
 from .models import Role, UserRole, Customer, Seller, Address, CustomizeUser
 from django.contrib.auth import logout
 from rest_framework_simplejwt.tokens import RefreshToken
+from datetime import datetime
 
 # Create your views here.
 
@@ -68,15 +69,15 @@ class ConfirmRegistrationView(APIView):
         user.is_active = True
         user.save()
         token = get_tokens_for_user(user)
-        # role = Role.objects.get(authority='CUSTOMER')
-        # userRole = UserRole.objects.get_or_create(user=user, role=role)
+        role = Role.objects.get(authority='CUSTOMER')
+        userRole = UserRole.objects.get_or_create(user=user, role=role)
         return Response({
             "data": "Your Account activated "+user.username, "jwt-token": token},
             status=status.HTTP_201_CREATED
         )
 
 
-class DeleteUser(APIView):
+class DeleteUserView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
@@ -140,7 +141,7 @@ class LoginView(APIView):
 
         if customizeuser.is_locked == True:
             return Response({
-                'message': 'Your accout is locked due to too many wrong password attempts',
+                'message': 'Your accout is locked due to too many wrong password attempts unlock account from reset password',
                 'status': status.HTTP_401_UNAUTHORIZED
             })
 
@@ -196,6 +197,10 @@ class ChangePasswordView(APIView):
         serializer = ChangePasswordSerializer(
             data=data, context={'user': user})
         serializer.is_valid(raise_exception=True)
+        customizeuser = CustomizeUser.objects.get(user=user)
+        customizeuser.password_update_date = datetime.now()
+        customizeuser.save()
+
         return Response({
             'message': 'password updated successfully!!',
             'status': status.HTTP_200_OK
@@ -210,10 +215,9 @@ class ResetPasswordView(APIView):
         serializer_class = PasswordResetSerializer(data=data)
         serializer_class.is_valid(raise_exception=True)
         email = serializer_class.data['email']
-        # user = User.objects.filter(email = email).first()
         try:
             user = User.objects.get(email=email)
-        except User.DoesNotExists:
+        except User.DoesNotExist:
             return Response({
                 'message': 'User Does not Exist'
             })
@@ -228,6 +232,7 @@ class ResetPasswordView(APIView):
 
         reset_link = 'http://127.0.0.1:8000/users/password-reset/'+encoded_pk+'/'+token+'/'
         send_mail_password_reset.delay(email, reset_link)
+
         return Response({
             'message': f'your password reset link {reset_link}',
             'status': status.HTTP_200_OK
