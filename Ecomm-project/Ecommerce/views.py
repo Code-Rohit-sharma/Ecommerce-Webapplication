@@ -283,7 +283,9 @@ class OrderView(APIView):
         user = request.user
         customer = Customer.objects.get(user=user)
         orders = Order.objects.filter(customer=customer)
-        serializer = OrderSerializer(orders, many=True)
+        order_product = OrderProduct.objects.filter(order__customer=customer)
+        # serializer = OrderSerializer(orders)
+        serializer = OrderProductSerializer(order_product, many=True)
         return Response({
             'orders': serializer.data,
             'status': status.HTTP_200_OK
@@ -311,6 +313,8 @@ class OrderView(APIView):
             })
 
         total_price = product.price * quantity
+        product.quantity_available = product.quantity_available - quantity
+        product.save()
 
         serializer = OrderSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
@@ -329,4 +333,51 @@ class OrderView(APIView):
             'product': product.product.name,
             'quantity': quantity,
             'total_amount': total_price
+        })
+
+
+class CancelOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        data = request.data
+        user = request.user
+        product_variation = data['product_variation']
+
+        try:
+            order_product = OrderProduct.objects.get(
+                product_variation=product_variation)
+        except:
+            return Response({
+                'message': 'This product does not available in your Orders',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        product_variation_id = ProductVariation.objects.get(
+            id=product_variation)
+
+        product = Product.objects.get(pk=product_variation_id.product.pk)
+
+        if product.is_canceleable == True:
+            order_status = OrderStatus.objects.get(order_product=order_product)
+            if order_status.from_status == 'ORDER_PLACED':
+                if order_status.to_status == 'ORDER_CONFIRMED':
+                    order_status.to_status = 'CANCELED'
+                    order_status.save()
+
+                else:
+                    return Response({
+                        'message': 'Your Order Does not confirmed by Seller',
+                        'status': status.HTTP_400_BAD_REQUEST
+                    })
+            else:
+                return Response({
+                    'message': 'Your order Does not plaed',
+                    'status': status.HTTP_400_BAD_REQUEST
+                })
+
+        return Response({
+            'message': 'Order Canceled',
+            'status': status.HTTP_200_OK
         })

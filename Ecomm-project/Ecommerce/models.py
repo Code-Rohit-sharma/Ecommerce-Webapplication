@@ -8,7 +8,7 @@ from django.contrib.postgres.fields import ArrayField
 
 class ParentCategory(models.Model):
     parent_category_name = models.CharField(max_length=100, unique=True)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_delete = models.BooleanField(default=False)
 
     def __str__(self):
@@ -60,7 +60,7 @@ class Product(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name+'-'+str(self.id)
+        return self.name
 
 
 class ProductVariation(models.Model):
@@ -109,16 +109,17 @@ class Order(models.Model):
     )
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    amount_paid = models.PositiveIntegerField(null=True,blank=True)
+    amount_paid = models.PositiveIntegerField(null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    payment_method = models.CharField(max_length=100, choices=PAYMENT_CHOICES,default='HOME',null=True,blank=True)
+    payment_method = models.CharField(
+        max_length=100, choices=PAYMENT_CHOICES, default='HOME', null=True, blank=True)
     customer_address_city = models.CharField(max_length=100)
     customer_address_state = models.CharField(max_length=100)
     customer_address_country = models.CharField(max_length=100)
     customer_address_address_line = models.CharField(max_length=150)
     customer_address_zip_code = models.PositiveIntegerField()
     customer_address_label = models.CharField(
-        choices=ADDRESS_LABEL, max_length=100,default='HOME')
+        choices=ADDRESS_LABEL, max_length=100, default='HOME')
 
     def __str__(self):
         return str(self.customer.user.username)
@@ -172,8 +173,10 @@ class OrderStatus(models.Model):
     order_product = models.ForeignKey(OrderProduct, on_delete=models.CASCADE)
     from_status = models.CharField(
         max_length=100, choices=FROM_STATUS, default='ORDER_PLACED')
-    to_status = models.CharField(max_length=100, choices=TO_STATUS,default='ORDER_CONFIRMED')
-    transition_notes_comment = models.CharField(max_length=150,default='nothing')
+    to_status = models.CharField(
+        max_length=100, choices=TO_STATUS, default='ORDER_CONFIRMED')
+    transition_notes_comment = models.CharField(
+        max_length=150, default='nothing')
     transition_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
