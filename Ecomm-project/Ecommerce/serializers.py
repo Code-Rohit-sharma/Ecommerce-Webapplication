@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct
+from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct,Seller
 
 
 class ParentCategorySerializer(serializers.ModelSerializer):

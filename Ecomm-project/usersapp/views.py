@@ -19,6 +19,10 @@ from django.contrib.auth import logout
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import datetime
 
+#cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 # Create your views here.
 
 
@@ -259,6 +263,7 @@ class CustomerView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
+    @method_decorator(cache_page(60*60*1))
     def get(self, request):
         customers = Customer.objects.all()
         serializer = CustomerSerializer(customers, many=True)
@@ -312,6 +317,7 @@ class SellerView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
+    @method_decorator(cache_page(60*60*1))
     def get(self, request):
         sellers = Seller.objects.all()
         serializer = SellerSerialzier(sellers, many=True)
@@ -346,17 +352,16 @@ class SellerView(APIView):
     def patch(self, request):
         data = request.data
         user = request.user
-
         try:
             user = Seller.objects.get(user=user)
         except:
             return Response({
-                'message': 'user not found',
+                'message': 'seller not found',
                 'status': status.HTTP_401_UNAUTHORIZED
             })
 
         serializer = SellerSerialzier(user, data=data, partial=True)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
         return Response({
             'msg': 'data Updated',

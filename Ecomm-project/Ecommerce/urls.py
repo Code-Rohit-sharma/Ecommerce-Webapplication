@@ -12,4 +12,8 @@ urlpatterns = [
     path('cart/',views.CartView.as_view(),name='cart'),
     path('order/',views.OrderView.as_view(),name='order'),
     path('cancel-order/',views.CancelOrderView.as_view(),name='cancel-order'),
+
+    #seller api's   
+    path('seller-products/',views.SellerProducts.as_view(),name='seller-products'),
+    path('seller-product-variation/',views.ProductVariationView.as_view(),name='product-variation'),
 ]

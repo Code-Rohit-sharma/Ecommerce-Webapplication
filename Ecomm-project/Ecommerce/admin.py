@@ -18,9 +18,12 @@ class OrderProductAdmin(admin.ModelAdmin):
 class OrderStatusAdmin(admin.ModelAdmin):
     list_display = ('order_product','from_status','to_status')
 
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('id','category_name')
+
 
 admin.site.register(ParentCategory)
-admin.site.register(Category)
+admin.site.register(Category,CategoryAdmin)
 admin.site.register(CategoryMetaDataField)
 admin.site.register(CategoryMetaDataFieldValue)
 admin.site.register(Product,ProductAdmin)

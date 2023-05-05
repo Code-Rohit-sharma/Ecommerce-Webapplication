@@ -3,12 +3,18 @@ from rest_framework.views import APIView
 from .serializers import ParentCategorySerializer, CategorySerializer, CategoryMetaDataFieldSerializer, CategoryMetaDataFieldValueSerializer, ProductSerializer, ProductVariationSerializer, ProductReviewSerializer, CartSerializer, OrderSerializer, OrderProductSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct, OrderStatus
+from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct, OrderStatus, Seller
 from rest_framework.permissions import AllowAny
 from usersapp.models import Customer
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.cache import cache_page
+
+# cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 
 # Create your views here.
 
@@ -379,5 +385,180 @@ class CancelOrderView(APIView):
 
         return Response({
             'message': 'Order Canceled',
+            'status': status.HTTP_200_OK
+        })
+
+# seller api's
+
+
+class SellerProducts(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    @method_decorator(cache_page(60*60*1))
+    def get(self, request):
+        user = request.user
+        try:
+            user = Seller.objects.get(user=user)
+        except:
+            return Response({
+                'message': 'user not found',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+        products = Product.objects.filter(seller=user)
+        serializer = ProductSerializer(products, many=True)
+        return Response({
+            'products': serializer.data
+        })
+
+    def post(self, reqeust):
+        data = reqeust.data
+        serializer = ProductSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response({
+            'message': 'product saved',
+            'status': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
+    def patch(self, request):
+        data = request.data
+        user = request.user
+        try:
+            seller = Seller.objects.get(user=user)
+        except:
+            return Response({
+                'message': 'seller not found',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        try:
+            product = Product.objects.filter(
+                seller=seller).get(pk=data['product_id'])
+        except:
+            return Response({
+                'error': "This is not your product",
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        serialzier = ProductSerializer(product, data=data, partial=True)
+        if serialzier.is_valid(raise_exception=True):
+            serialzier.save()
+
+        return Response({
+            'message': 'Product Updated',
+            'status': status.HTTP_200_OK
+        })
+
+    def delete(self, request):
+        data = request.data
+        user = request.user
+
+        try:
+            seller = Seller.objects.get(user=user)
+        except:
+            return Response({
+                'message': 'seller not found',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        try:
+            product = Product.objects.get(pk=data['product'])
+        except:
+            return Response({
+                'message': 'product not found',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+
+        product.is_deleted = True
+        product.save()
+
+        return Response({'message': 'product deleted'})
+
+
+class ProductVariationView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        data = request.data
+        user = request.user
+        try:
+            seller = Seller.objects.get(user=user)
+        except:
+            return Response({
+                'message': 'seller not found'
+            })
+        try:
+            product = Product.objects.filter(
+                seller=seller).get(pk=data['product'])
+        except:
+            return Response({
+                'message': 'product not found'
+            })
+        serializer = ProductVariationSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            product_variation = ProductVariation.objects.create(
+                product=product, **serializer.data)
+
+        return Response({
+            'message': 'product-variation post',
+            'status': status.HTTP_200_OK
+        })
+
+    def patch(self, request):
+        data = request.data
+        user = request.user
+        try:
+            seller = Seller.objects.get(user=user)
+        except:
+            return Response({
+                'message': 'seller not found'
+            })
+        try:
+            product = Product.objects.filter(
+                seller=seller).get(pk=data['product'])
+        except:
+            return Response({
+                'message': 'product not found'
+            })
+
+        product_variation = ProductVariation.objects.filter(
+            product=product).get(pk=data['product_variation_id'])
+
+        serializer = ProductVariationSerializer(
+            product_variation, data=data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+        return Response({
+            'message': 'variation updated successfully',
+            'status': status.HTTP_200_OK
+        })
+
+    def delete(self, request):
+        data = request.data
+        user = request.user
+        try:
+            seller = Seller.objects.get(user=user)
+        except:
+            return Response({
+                'message': 'seller not found'
+            })
+        try:
+            product = Product.objects.filter(
+                seller=seller).get(pk=data['product'])
+        except:
+            return Response({
+                'message': 'product not found'
+            })
+
+        product_variation = ProductVariation.objects.filter(
+            product=product).get(pk=data['product_variation_id'])
+
+        product_variation.delete()
+        return Response({
+            'message': 'product-variation-deleted',
             'status': status.HTTP_200_OK
         })
