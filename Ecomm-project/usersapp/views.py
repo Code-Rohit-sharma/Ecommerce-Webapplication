@@ -1,12 +1,11 @@
 from django.shortcuts import render
-from .serializers import RegisterSerializer, ChangePasswordSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, CustomerSerializer, SellerSerialzier, AddressSerializer
+from .serializers import RegisterSerializer, ChangePasswordSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, CustomerSerializer, SellerSerialzier, AddressSerializer, AdminSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
 from .generate_token import get_tokens_for_user
 from django.utils.encoding import force_bytes, smart_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -18,8 +17,9 @@ from .models import Role, UserRole, Customer, Seller, Address, CustomizeUser
 from django.contrib.auth import logout
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import datetime
+from Ecommerce.models import Product
 
-#cache
+# cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie, vary_on_headers
@@ -411,5 +411,110 @@ class AddressView(APIView):
 
         return Response({
             'message': 'address updated',
+            'status': status.HTTP_200_OK
+        })
+
+
+class AdminView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = User.objects.filter(is_superuser=True)
+        serializer = AdminSerializer(user, many=True)
+        return Response({
+            'data': serializer.data,
+            'status': status.HTTP_200_OK
+        })
+
+    def patch(self, request):
+        data = request.data
+        user = request.user
+        try:
+            user = User.objects.get(username=user)
+        except:
+            return Response({
+                'error': 'user not found',
+                'status': status.HTTP_400_BAD_REQUEST
+            })
+        if not user.is_superuser == True:
+            return Response({
+                'error': 'you are not a super user',
+                'status': status.HTTP_401_UNAUTHORIZED
+            })
+        serializer = AdminSerializer(user, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({
+            'message': 'user updated',
+            'status': status.HTTP_200_OK
+        })
+
+
+class AdminRegisterView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        username = data['username']
+        try:
+            user = User.objects.get(username=username)
+            if user:
+                return Response({
+                    'error': 'username already taken'
+                })
+        except:
+            serializer = AdminSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            try:
+                user = User.objects.get(username=username)
+            except:
+                return Response({
+                    'error': 'username not found'
+                })
+            user.is_superuser = True
+            user.is_staff = True
+            user.save()
+
+        return Response({
+            'message': 'admin registered',
+            'status': status.HTTP_200_OK
+        })
+
+
+class ProductActivation(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def patch(self, request):
+        data = request.data
+        user = request.user
+        activation_status = data['activation_status']
+        try:
+            user = User.objects.get(username=user)
+        except:
+            return Response({
+                'error': 'user not found'
+            })
+
+        if user.is_superuser == True:
+            try:
+                product = Product.objects.get(pk=data['product_id'])
+            except:
+                return Response({
+                    'error': 'product not found'
+                })
+
+            product.is_active = activation_status
+            product.save()
+        else:
+            return Response({
+                'error': 'you are not a super user'
+            })
+
+        return Response({
+            'message': f'product active status changed to {activation_status}',
             'status': status.HTTP_200_OK
         })

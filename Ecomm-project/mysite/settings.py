@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-6w!(5hmp6)^ifet6n5*hoz@j$zp$jq)d%of1)w_khrf&hs@n^s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'Ecommerce',
     'paymentapp',
     'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -93,12 +95,12 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     },
-        # 'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'Ecommerce_db',
-        # 'USER': 'postgres',
-        # 'PASSWORD': 'rohit@123',
-        # 'HOST': 'localhost',
-        # 'PORT':'5432',
+    # 'ENGINE': 'django.db.backends.postgresql',
+    # 'NAME': 'Ecommerce_db',
+    # 'USER': 'postgres',
+    # 'PASSWORD': 'rohit@123',
+    # 'HOST': 'localhost',
+    # 'PORT':'5432',
 }
 
 
@@ -185,3 +187,10 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=5),
 }
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+# CORS_ORIGIN_WHITELIST = (
+#     'http://localhost:8000',
+# )

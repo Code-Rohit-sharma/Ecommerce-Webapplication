@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct,Seller
+from .models import ParentCategory, Category, CategoryMetaDataField, CategoryMetaDataFieldValue, Product, ProductVariation, ProductReview, Cart, Order, OrderProduct, Seller, OrderStatus
+from django.contrib.auth.models import User
 
 
 class ParentCategorySerializer(serializers.ModelSerializer):

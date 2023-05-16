@@ -197,3 +197,10 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['city', 'state', 'address_line', 'zip_code', 'label']
+
+
+# admin serializer
+class AdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'password']
